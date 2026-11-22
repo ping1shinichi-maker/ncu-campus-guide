@@ -66,46 +66,115 @@ except (OSError, json.JSONDecodeError, ValueError) as exc:
 query = st.text_input("搜尋建築物、處室或行政業務", placeholder="例如：圖書館、學生證、腳踏車證")
 filtered = [item for item in locations if matches_query(item, query.strip())]
 
+
+# 將頁面分成左右兩欄
 map_col, result_col = st.columns([2, 1])
 
+# ==========================
+# 左側：互動式校園地圖
+# ==========================
 with map_col:
     st.subheader("校園地圖")
+
     campus_map = folium.Map(
         location=CAMPUS_CENTER,
         zoom_start=16,
         tiles="OpenStreetMap",
         control_scale=True,
     )
+
+    # 將建築物加入地圖
     for location in filtered:
         coords = get_coordinates(location)
+
         if coords is None:
             continue
+
         name = escape(str(location.get("name", "未命名建築")))
+
         folium.Marker(
             location=coords,
             tooltip=name,
             popup=folium.Popup(name, max_width=260),
         ).add_to(campus_map)
-    st_folium(campus_map, height=520, width=800, key="campus_map")
 
+    # 接收使用者點擊地圖標記後的資訊
+    map_data = st_folium(
+        campus_map,
+        height=520,
+        width=800,
+        key="campus_map",
+        returned_objects=["last_object_clicked_tooltip"],
+    )
+
+
+# 取得使用者點擊的建築名稱
+clicked_name = (map_data or {}).get(
+    "last_object_clicked_tooltip"
+)
+
+# 尋找點擊名稱所對應的建築資料
+selected_location = next(
+    (
+        location
+        for location in filtered
+        if location.get("name") == clicked_name
+    ),
+    None,
+)
+
+
+# ==========================
+# 右側：建築物詳細資訊
+# ==========================
 with result_col:
-    st.subheader("搜尋結果")
-    if not locations:
-        st.info("尚未加入建築資料。下一步請編輯 data/locations.json。")
-    elif not filtered:
-        st.warning("找不到符合的項目，請嘗試其他關鍵字。")
-    else:
-        for location in filtered:
-            with st.expander(str(location.get("name", "未命名建築")), expanded=len(filtered) == 1):
-                description = location.get("description", "")
-                if description:
-                    st.write(description)
-                for unit in location.get("units", []):
-                    st.markdown(f"**{unit.get('name', '未命名處室')}**")
-                    for service in unit.get("services", []):
-                        st.write("• " + str(service.get("name", "未命名業務")))
-                        url = str(service.get("url", "")).strip()
-                        if url.startswith(("https://", "http://")):
-                            st.markdown(f"[官方資訊連結]({url})")
+    st.subheader("建築物資訊")
 
-st.caption("地圖資料 © OpenStreetMap contributors。所有行政資訊應以校方官方公告為準。")
+    if not locations:
+        st.info("尚未加入建築資料。")
+
+    elif not filtered:
+        st.warning("找不到符合的建築物。")
+
+    elif selected_location is None:
+        st.info("請點擊地圖上的建築物標記。")
+
+        st.markdown("**目前的建築物：**")
+        for location in filtered:
+            st.write("•", location["name"])
+
+    else:
+        # 顯示建築名稱
+        st.markdown(f"### {selected_location['name']}")
+
+        # 顯示建築簡介
+        st.write(selected_location.get("description", ""))
+
+        st.divider()
+
+        # 顯示該建築物內的處室
+        for unit in selected_location.get("units", []):
+            with st.expander(unit["name"], expanded=True):
+
+                for service in unit.get("services", []):
+                    st.write("•", service["name"])
+
+                    url = service.get("url", "")
+
+                    if url.startswith(("https://", "http://")):
+                        st.markdown(
+                            f"[前往官方網站]({url})"
+                        )
+
+        # 顯示建築資訊來源
+        source = selected_location.get("info_source", "")
+        if source.startswith(("https://", "http://")):
+            st.markdown(f"[查看建築資訊來源]({source})")
+
+        st.caption("建築標記位置僅供參考，部分座標仍待核對。")
+
+
+st.caption(
+    "地圖資料 © OpenStreetMap contributors。"
+    "所有行政資訊應以校方官方公告為準。"
+)
