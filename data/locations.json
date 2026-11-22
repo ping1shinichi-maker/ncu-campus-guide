@@ -1,1 +1,119 @@
-[]
+[
+  {
+    "name": "行政大樓",
+    "latitude": 24.96808,
+    "longitude": 121.1952,
+    "description": "校內行政服務館舍；地圖標記為依校方配置圖及附近站牌推估的概略位置，待實地核對建築入口。",
+    "coordinate_status": "approximate_needs_field_check",
+    "coordinate_source": "https://ebus.tycg.gov.tw/cms/api/route/3220/stop-address.pdf",
+    "info_source": "https://sec.ncu.edu.tw/p/412-1007-457.php",
+    "units": [
+      {
+        "name": "秘書室（2樓）",
+        "services": [
+          {
+            "name": "秘書室官網與業務資訊",
+            "keywords": [
+              "秘書室",
+              "校務會議",
+              "文書"
+            ],
+            "url": "https://sec.ncu.edu.tw/"
+          }
+        ]
+      },
+      {
+        "name": "總務處",
+        "services": [
+          {
+            "name": "總務處官網",
+            "keywords": [
+              "總務處",
+              "校園管理"
+            ],
+            "url": "https://www.oga.ncu.edu.tw/"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "教學研究綜合大樓",
+    "latitude": 24.96833,
+    "longitude": 121.19171,
+    "description": "亦稱教研大樓。教務處與多項教學服務設於此棟，註冊組位於3樓；位置取自 OpenStreetMap 建物中心點。",
+    "coordinate_status": "osm_building_centroid",
+    "coordinate_source": "https://mapcarta.com/W996613836",
+    "info_source": "https://ncusec.ncu.edu.tw/news/headlines_content.php?H_ID=3989",
+    "units": [
+      {
+        "name": "教務處",
+        "services": [
+          {
+            "name": "註冊組（3樓）：學籍與成績文件相關服務",
+            "keywords": [
+              "註冊組",
+              "註冊",
+              "學籍",
+              "成績單",
+              "成績證明",
+              "成績",
+              "教務處"
+            ],
+            "url": "https://pdc.adm.ncu.edu.tw/"
+          },
+          {
+            "name": "課務相關資訊",
+            "keywords": [
+              "課務",
+              "選課",
+              "課表",
+              "教務"
+            ],
+            "url": "https://pdc.adm.ncu.edu.tw/"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "總圖書館",
+    "latitude": 24.968209,
+    "longitude": 121.194312,
+    "description": "中央大學總圖書館，位於行政大樓與中正圖書館之間；座標參考「中壢中央大學」測站的圖書館 B1 位置，非入口定位。",
+    "coordinate_status": "library_basement_station_approximation",
+    "coordinate_source": "https://gist.github.com/personlin/cd8e3073ec94f8a606bb",
+    "info_source": "https://www.ncu.edu.tw/p/412-1000-324.php?Lang=zh-tw",
+    "units": [
+      {
+        "name": "圖書館",
+        "services": [
+          {
+            "name": "圖書館官網與館藏查詢",
+            "keywords": [
+              "圖書館",
+              "總圖",
+              "找書",
+              "查書",
+              "借書",
+              "還書",
+              "館藏"
+            ],
+            "url": "https://www.lib.ncu.edu.tw/"
+          },
+          {
+            "name": "開放時間與館內服務",
+            "keywords": [
+              "開館時間",
+              "開放時間",
+              "幾點開",
+              "幾點關",
+              "讀書"
+            ],
+            "url": "https://www.lib.ncu.edu.tw/"
+          }
+        ]
+      }
+    ]
+  }
+]
