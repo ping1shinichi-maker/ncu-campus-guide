@@ -27,8 +27,32 @@ def load_locations():
 
 
 
+
+def match_score(query, candidate, exact_points, partial_points):
+    """計算搜尋文字與資料欄位的匹配分數。"""
+
+    query = query.strip().casefold()
+    candidate = str(candidate or "").strip().casefold()
+
+    if not query or not candidate:
+        return 0
+
+    # 完全相同
+    if query == candidate:
+        return exact_points
+
+    # 使用者輸入與資料有包含關係
+    if (
+        (len(query) >= 2 and query in candidate)
+        or (len(candidate) >= 2 and candidate in query)
+    ):
+        return partial_points
+
+    return 0
+
+
 def search_services(locations, query):
-    """搜尋符合使用者問題的行政業務。"""
+    """搜尋行政業務，並依相關程度排序。"""
 
     query = query.strip().casefold()
 
@@ -41,36 +65,51 @@ def search_services(locations, query):
         for unit in building.get("units", []):
             for service in unit.get("services", []):
 
-                # 業務與處室名稱
-                names = [
-                    str(service.get("name", "")),
-                    str(unit.get("name", ""))
-                ]
-
-                # 這項業務對應的關鍵字
-                keywords = [
-                    str(k)
-                    for k in service.get("keywords", [])
-                ]
-
-                # 檢查業務名稱或處室名稱
-                name_match = any(
-                    query in name.casefold()
-                    for name in names
+                # 業務名稱：優先程度最高
+                score = match_score(
+                    query, service.get("name"), 120, 100
                 )
 
-                # 支援使用者輸入完整句子
-                keyword_match = any(
-                    query in keyword.casefold()
-                    or (
-                        len(keyword) >= 2
-                        and keyword.casefold() in query
+                # 關鍵字：優先程度其次
+                for keyword in service.get("keywords", []):
+                    score = max(
+                        score,
+                        match_score(query, keyword, 110, 90)
                     )
-                    for keyword in keywords
+
+                # 業務介紹
+                score = max(
+                    score,
+                    match_score(
+                        query, service.get("description"), 60, 50
+                    )
                 )
 
-                if name_match or keyword_match:
-                    results.append((building, unit, service))
+                # 處室名稱
+                score = max(
+                    score,
+                    match_score(query, unit.get("name"), 55, 45)
+                )
+
+                # 建築物名稱
+                score = max(
+                    score,
+                    match_score(query, building.get("name"), 35, 25)
+                )
+
+                if score > 0:
+                    results.append(
+                        (score, building, unit, service)
+                    )
+
+    # 分數由高到低排序
+    results.sort(
+        key=lambda item: (
+            -item[0],
+            item[1].get("name", ""),
+            item[3].get("name", "")
+        )
+    )
 
     return results
 
@@ -83,18 +122,17 @@ def matches_query(location, query):
     if not query:
         return True
 
-    # 搜尋建築名稱與介紹
-    building_match = any(
-        query in str(location.get(field, "")).casefold()
-        for field in ["name", "description"]
+    # 建築物本身是否符合
+    building_score = max(
+        match_score(query, location.get("name"), 35, 25),
+        match_score(query, location.get("description"), 20, 15)
     )
 
-    # 搜尋這棟建築物內的行政業務
-    service_match = bool(
-        search_services([location], query)
-    )
+    # 其內部業務是否符合
+    has_services = bool(search_services([location], query))
 
-    return building_match or service_match
+    return building_score > 0 or has_services
+
 
 
 def get_coordinates(location):
@@ -125,6 +163,18 @@ filtered = [item for item in locations if matches_query(item, query.strip())]
 # 取得符合問題的行政業務
 service_results = search_services(filtered, query)
 
+# 記錄地圖重新初始化的次數
+if "map_revision" not in st.session_state:
+    st.session_state.map_revision = 0
+
+
+def focus_building(building_name):
+    """按下定位按鈕時，更新選擇的建築物。"""
+
+    st.session_state.target_building = building_name
+    st.session_state.map_revision += 1
+
+
 # 建立選擇建築物的狀態
 if "last_search" not in st.session_state:
     st.session_state.last_search = ""
@@ -138,13 +188,27 @@ options = ["顯示全部"] + [
 ]
 
 # 當搜尋文字改變時，自動更新定位目標
-if st.session_state.last_search != query.strip():
-    st.session_state.last_search = query.strip()
 
-    if query.strip() and len(filtered) == 1:
-        st.session_state.target_building = filtered[0]["name"]
+# 搜尋內容變更時，重新決定地圖定位目標
+if st.session_state.last_search != query.strip():
+
+    st.session_state.last_search = query.strip()
+    st.session_state.map_revision += 1
+
+    if query.strip() and service_results:
+        # 優先選擇相關程度最高的搜尋結果
+        st.session_state.target_building = (
+            service_results[0][1]["name"]
+        )
+
+    elif query.strip() and len(filtered) == 1:
+        st.session_state.target_building = (
+            filtered[0]["name"]
+        )
+
     else:
         st.session_state.target_building = "顯示全部"
+
 
 # 避免選到已不在搜尋結果中的建築
 if st.session_state.target_building not in options:
@@ -216,7 +280,7 @@ with map_col:
     zoom=map_zoom,
     height=520,
     width=800,
-    key=f"campus_map_{target_name}",
+    key=f"campus_map_{target_name}_{st.session_state.map_revision}",
     returned_objects=["last_object_clicked_tooltip"],
 )
 
@@ -250,77 +314,126 @@ selected_location = next(
 # 右側：建築物詳細資訊
 # ==========================
 
-with result_col:
 
-    # ==========================
-    # 行政業務搜尋結果
-    # ==========================
-    if query.strip():
+if query.strip():
 
-        st.subheader("🔎 行政業務搜尋結果")
+    st.subheader("🔎 行政業務搜尋結果")
 
-        if service_results:
+    if service_results:
 
-            st.success(
-                f"找到 {len(service_results)} 項相關業務"
-            )
+        st.caption(
+            f"找到 {len(service_results)} 項相關業務，"
+            "已依相關程度排序"
+        )
 
-            for building, unit, service in service_results:
+        # 新增 score，所以需要接收四個值
+        for index, (score, building, unit, service) in enumerate(
+            service_results
+        ):
 
-                with st.container(border=True):
+            with st.container(border=True):
 
-                    # 顯示業務名稱
-                    st.markdown(
-                        f"**{service.get('name', '未命名業務')}**"
-                    )
+                # 業務名稱
+                st.markdown(
+                    f"#### {service.get('name', '未命名業務')}"
+                )
 
-                    # 顯示負責處室與建築
-                    st.caption(
-                        f"{building['name']}｜{unit['name']}"
-                    )
-                    
-                    # 顯示業務介紹
-                    description = service.get("description", "")
+                # 承辦單位與建築物
+                st.caption(f"承辦單位：{unit['name']}")
+                st.caption(f"相關建築：{building['name']}")
 
-                    if description:
-                        st.write(description)
+                # 業務簡介
+                description = service.get("description", "")
+                if description:
+                    st.write(description)
 
-                    # 顯示辦理步驟
-                    steps = service.get("steps", [])
+                # 辦理流程收進展開區塊
+                steps = service.get("steps", [])
 
-                    if steps:
-                        st.markdown("**辦理步驟：**")
-
-                        for i, step in enumerate(steps, start=1):
+                if steps:
+                    with st.expander(
+                        "📋 查看辦理流程",
+                        expanded=(index == 0)
+                    ):
+                        for i, step in enumerate(steps, 1):
                             st.write(f"{i}. {step}")
 
-                    # 顯示地點注意事項
-                    location_note = service.get("location_note", "")
+                # 區分實際辦理地點與相關建築
+                service_location = service.get(
+                    "service_location", ""
+                )
+                location_note = service.get(
+                    "location_note", ""
+                )
 
-                    if location_note:
-                        st.warning(location_note)
+                if service_location:
+                    st.write(
+                        f"實際辦理地點：{service_location}"
+                    )
+                elif location_note:
+                    st.warning(location_note)
+                else:
+                    st.caption(
+                        "實際辦理地點尚未核對，"
+                        "請以官方公告為準。"
+                    )
 
-                    # 顯示官方操作說明
-                    source_url = service.get("source_url", "")
+                # 兩個主要操作按鈕
+                left, right = st.columns(2)
 
-                    if source_url.startswith(("https://", "http://")):
-                        st.markdown(f"[官方操作說明]({source_url})")
+                with left:
+                    st.button(
+                        "📍 定位建築",
+                        key=f"locate_{index}",
+                        on_click=focus_building,
+                        args=(building["name"],),
+                        use_container_width=True
+                    )
 
-                    # 顯示官方網站連結
-                    url = str(service.get("url", "")).strip()
+                with right:
+                    url = str(service.get("url", ""))
 
                     if url.startswith(("https://", "http://")):
-                        st.markdown(
-                            f"[查看官方資訊]({url})"
+                        st.link_button(
+                            "🔗 官方網站",
+                            url,
+                            use_container_width=True
                         )
 
+                # 顯示額外的資料來源
+                source_url = str(
+                    service.get("source_url", "")
+                )
+
+                if (
+                    source_url.startswith(("https://", "http://"))
+                    and source_url != url
+                ):
+                    st.markdown(
+                        f"[查看資料來源]({source_url})"
+                    )
+
+                # 資料最後核對日期
+                verified_at = service.get("verified_at")
+
+                if verified_at:
+                    st.caption(f"最後核對：{verified_at}")
+                else:
+                    st.caption(
+                        "尚未記錄資料核對日期，"
+                        "實際資訊以官方公告為準。"
+                    )
+
+    else:
+        if filtered:
+            st.info("找到相關建築，但沒有符合的行政業務。")
         else:
             st.info(
-                "目前找不到符合的行政業務，"
-                "請嘗試較短的關鍵字。"
+                "找不到相關資料，請嘗試其他關鍵字。"
             )
 
-        st.divider()
+    st.divider()
+
 
     # 原本的建築物詳細資訊
     st.subheader("建築物資訊")
