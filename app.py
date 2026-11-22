@@ -67,6 +67,59 @@ query = st.text_input("搜尋建築物、處室或行政業務", placeholder="�
 filtered = [item for item in locations if matches_query(item, query.strip())]
 
 
+# 建立選擇建築物的狀態
+if "last_search" not in st.session_state:
+    st.session_state.last_search = ""
+
+if "target_building" not in st.session_state:
+    st.session_state.target_building = "顯示全部"
+
+# 建立下拉選單選項
+options = ["顯示全部"] + [
+    location["name"] for location in filtered
+]
+
+# 當搜尋文字改變時，自動更新定位目標
+if st.session_state.last_search != query.strip():
+    st.session_state.last_search = query.strip()
+
+    if query.strip() and len(filtered) == 1:
+        st.session_state.target_building = filtered[0]["name"]
+    else:
+        st.session_state.target_building = "顯示全部"
+
+# 避免選到已不在搜尋結果中的建築
+if st.session_state.target_building not in options:
+    st.session_state.target_building = "顯示全部"
+
+target_name = st.selectbox(
+    "📍 定位建築物",
+    options,
+    key="target_building",
+)
+
+# 取得要定位的建築資料
+target_location = next(
+    (
+        location for location in filtered
+        if location.get("name") == target_name
+    ),
+    None,
+)
+
+target_coords = (
+    get_coordinates(target_location)
+    if target_location else None
+)
+
+# 決定地圖中心與縮放程度
+map_center = (
+    target_coords if target_coords is not None
+    else CAMPUS_CENTER
+)
+
+map_zoom = 18 if target_coords is not None else 16
+
 # 將頁面分成左右兩欄
 map_col, result_col = st.columns([2, 1])
 
@@ -77,11 +130,11 @@ with map_col:
     st.subheader("校園地圖")
 
     campus_map = folium.Map(
-        location=CAMPUS_CENTER,
-        zoom_start=16,
-        tiles="OpenStreetMap",
-        control_scale=True,
-    )
+    location=map_center,
+    zoom_start=map_zoom,
+    tiles="OpenStreetMap",
+    control_scale=True,
+)
 
     # 將建築物加入地圖
     for location in filtered:
@@ -100,28 +153,39 @@ with map_col:
 
     # 接收使用者點擊地圖標記後的資訊
     map_data = st_folium(
-        campus_map,
-        height=520,
-        width=800,
-        key="campus_map",
-        returned_objects=["last_object_clicked_tooltip"],
-    )
+    campus_map,
+    center=map_center,
+    zoom=map_zoom,
+    height=520,
+    width=800,
+    key=f"campus_map_{target_name}",
+    returned_objects=["last_object_clicked_tooltip"],
+)
 
 
-# 取得使用者點擊的建築名稱
+
+# 取得地圖上最後點擊的建築名稱
 clicked_name = (map_data or {}).get(
     "last_object_clicked_tooltip"
 )
 
-# 尋找點擊名稱所對應的建築資料
+# 點擊標記優先；否則使用下拉選單的選擇
+if clicked_name:
+    selected_name = clicked_name
+elif target_name != "顯示全部":
+    selected_name = target_name
+else:
+    selected_name = None
+
+# 找出對應的完整建築資料
 selected_location = next(
     (
-        location
-        for location in filtered
-        if location.get("name") == clicked_name
+        location for location in filtered
+        if location.get("name") == selected_name
     ),
     None,
 )
+
 
 
 # ==========================
