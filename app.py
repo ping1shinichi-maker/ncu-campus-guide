@@ -278,6 +278,33 @@ with result_col:
                     st.caption(
                         f"{building['name']}｜{unit['name']}"
                     )
+                    
+                    # 顯示業務介紹
+                    description = service.get("description", "")
+
+                    if description:
+                        st.write(description)
+
+                    # 顯示辦理步驟
+                    steps = service.get("steps", [])
+
+                    if steps:
+                        st.markdown("**辦理步驟：**")
+
+                        for i, step in enumerate(steps, start=1):
+                            st.write(f"{i}. {step}")
+
+                    # 顯示地點注意事項
+                    location_note = service.get("location_note", "")
+
+                    if location_note:
+                        st.warning(location_note)
+
+                    # 顯示官方操作說明
+                    source_url = service.get("source_url", "")
+
+                    if source_url.startswith(("https://", "http://")):
+                        st.markdown(f"[官方操作說明]({source_url})")
 
                     # 顯示官方網站連結
                     url = str(service.get("url", "")).strip()
