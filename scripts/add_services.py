@@ -22,7 +22,7 @@ def upsert_service(unit, new_service):
 
     for i, service in enumerate(services):
         if service.get("id") == new_service["id"]:
-            services[i] = new_service
+            services[i] = {**service, **new_service}
             return
 
     services.append(new_service)

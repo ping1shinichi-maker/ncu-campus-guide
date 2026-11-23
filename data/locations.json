@@ -18,9 +18,18 @@
               "校務會議",
               "文書"
             ],
-            "url": "https://sec.ncu.edu.tw/"
+            "url": "https://sec.ncu.edu.tw/",
+            "id": "administration-01-01",
+            "description": "",
+            "steps": [],
+            "service_location": "",
+            "location_note": "",
+            "source_url": "",
+            "verified_at": null,
+            "verification_status": "pending"
           }
-        ]
+        ],
+        "id": "administration-unit-01"
       },
       {
         "name": "總務處",
@@ -31,7 +40,15 @@
               "總務處",
               "校園管理"
             ],
-            "url": "https://www.oga.ncu.edu.tw/"
+            "url": "https://www.oga.ncu.edu.tw/",
+            "id": "administration-02-01",
+            "description": "",
+            "steps": [],
+            "service_location": "",
+            "location_note": "",
+            "source_url": "",
+            "verified_at": null,
+            "verification_status": "pending"
           },
           {
             "id": "bicycle-permit",
@@ -53,11 +70,18 @@
             ],
             "location_note": "目前地圖標示總務處相關位置，不代表已確認的自行車證領取地點。",
             "url": "https://portal.ncu.edu.tw/",
-            "source_url": "https://www.oga.ncu.edu.tw/resource/attachment/1767233247.pdf"
+            "source_url": "https://www.oga.ncu.edu.tw/resource/attachment/1767233247.pdf",
+            "service_location": "",
+            "verified_at": null,
+            "verification_status": "pending"
           }
-        ]
+        ],
+        "id": "administration-unit-02"
       }
-    ]
+    ],
+    "id": "administration",
+    "category": "administration",
+    "aliases": []
   },
   {
     "name": "教學研究綜合大樓",
@@ -79,7 +103,15 @@
               "學籍",
               "學籍資料"
             ],
-            "url": "https://pdc.adm.ncu.edu.tw/"
+            "url": "https://pdc.adm.ncu.edu.tw/",
+            "id": "teaching-research-01-01",
+            "description": "",
+            "steps": [],
+            "service_location": "",
+            "location_note": "",
+            "source_url": "",
+            "verified_at": null,
+            "verification_status": "pending"
           },
           {
             "name": "課務相關資訊",
@@ -89,7 +121,15 @@
               "課表",
               "教務"
             ],
-            "url": "https://pdc.adm.ncu.edu.tw/"
+            "url": "https://pdc.adm.ncu.edu.tw/",
+            "id": "teaching-research-01-02",
+            "description": "",
+            "steps": [],
+            "service_location": "",
+            "location_note": "",
+            "source_url": "",
+            "verified_at": null,
+            "verification_status": "pending"
           },
           {
             "id": "student-card-replacement",
@@ -109,7 +149,11 @@
               "依規定至教研大樓 3 樓註冊組辦理後續領證。"
             ],
             "url": "https://pdc.adm.ncu.edu.tw/p/412-1019-1933.php?Lang=zh-tw",
-            "source_url": "https://pdc.adm.ncu.edu.tw/p/412-1019-1706.php"
+            "source_url": "https://pdc.adm.ncu.edu.tw/p/412-1019-1706.php",
+            "service_location": "",
+            "location_note": "",
+            "verified_at": null,
+            "verification_status": "pending"
           },
           {
             "id": "transcript-application",
@@ -128,11 +172,20 @@
               "可至教研大樓 1 樓申請機台或 3 樓註冊組辦理。",
               "如需 Email 申請或郵寄，請查看教務處官方申請說明。"
             ],
-            "url": "https://pdc.adm.ncu.edu.tw/p/412-1019-1941.php?Lang=zh-tw"
+            "url": "https://pdc.adm.ncu.edu.tw/p/412-1019-1941.php?Lang=zh-tw",
+            "service_location": "",
+            "location_note": "",
+            "source_url": "",
+            "verified_at": null,
+            "verification_status": "pending"
           }
-        ]
+        ],
+        "id": "teaching-research-unit-01"
       }
-    ]
+    ],
+    "id": "teaching-research",
+    "category": "academic",
+    "aliases": []
   },
   {
     "name": "總圖書館",
@@ -157,7 +210,15 @@
               "還書",
               "館藏"
             ],
-            "url": "https://www.lib.ncu.edu.tw/"
+            "url": "https://www.lib.ncu.edu.tw/",
+            "id": "main-library-01-01",
+            "description": "",
+            "steps": [],
+            "service_location": "",
+            "location_note": "",
+            "source_url": "",
+            "verified_at": null,
+            "verification_status": "pending"
           },
           {
             "name": "開放時間與館內服務",
@@ -168,10 +229,22 @@
               "幾點關",
               "讀書"
             ],
-            "url": "https://www.lib.ncu.edu.tw/"
+            "url": "https://www.lib.ncu.edu.tw/",
+            "id": "main-library-01-02",
+            "description": "",
+            "steps": [],
+            "service_location": "",
+            "location_note": "",
+            "source_url": "",
+            "verified_at": null,
+            "verification_status": "pending"
           }
-        ]
+        ],
+        "id": "main-library-unit-01"
       }
-    ]
+    ],
+    "id": "main-library",
+    "category": "library",
+    "aliases": []
   }
 ]
